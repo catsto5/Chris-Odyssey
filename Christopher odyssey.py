@@ -1,7 +1,8 @@
 import numpy as np
 #PARAMETERS --------------------------------------
-m=100 #let l range from 1 to 100
-
+m=100 #how many dynamical systems --- l=1,...,m
+T=100
+N=100
 #GENERATE c_l = F(l/m) ---------------------------
 l=np.arange(1,m+1)
 def F(x):
@@ -14,4 +15,9 @@ def g(x):
 def bar_f(x,c): #dependent on l
   return c*g(x)
 
-#GENERATE
+#GENERATE f^*_l --------------------------------
+def f(x,c):
+  return bar_f(x % 1,c)
+
+#GENERATE TRAJECTORIES -------------------------
+
