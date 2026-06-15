@@ -21,6 +21,7 @@ def f(x,c):
   return bar_f(x % 1,c)
 
 #GENERATE TRAJECTORIES -------------------------
+np.random.seed(1)
 eta = np.random.normal(loc=0.0, scale=sigma, size=(m, T)) #generate i.i.d. N(0,\sigma^2)
 x = np.zeros((m, T+1))  #initial state x_0=0
 for i in range(m):
