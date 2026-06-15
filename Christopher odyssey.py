@@ -28,5 +28,4 @@ for i in range(m):
   for t in range(T):
     x[i,t+1]=f(x[i,t],c_l)+eta[i,t]
 
-
-
+print(x)
