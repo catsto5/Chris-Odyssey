@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 #================================================
 #PARAMETERS
 #================================================
-m=500 #how many dynamical systems\
+m=20 #how many dynamical systems\
 T=100
 N=100
 sigma=1.0
@@ -50,16 +50,20 @@ for i in range(m):
 #================================================
 #SANITY CHECK
 #================================================
-beta2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0] #values ot beta to try
-m2=np.arange(10,m+1) #values of m to try
 
-for beta in beta2:
+beta2=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0] #values of beta to try
+m2=[100,200,300,400,500,600,700,800,900,1000]
+
+for m in m2:
     y = []
-    for m in m2:
-        c = (np.arange(1, m+1)/m)**beta
-        y.append(np.sum((c[:-1] - c[1:])**2))
-    plt.plot(m2, y, label=f"β={beta}")
-plt.xlabel(r"$m$")
+    for beta in beta2:
+        c = (np.arange(1, m + 1) / m)**(beta)
+        d = np.sum((c[:-1] - c[1:])**2)
+        y.append(d)
+    plt.plot(beta2, y, label=f"m={m}")
+
+
+plt.xlabel(r"Value of $\beta$")
 plt.ylabel(r"$\sum_{l=1}^{m-1} |c_l - c_{l+1}|^2$")
 plt.legend()
 plt.show()
