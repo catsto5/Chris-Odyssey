@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 #================================================
 #PARAMETERS
 #================================================
-m=20 #how many dynamical systems\
-T=100
-N=100
+m=5 #how many dynamical systems\
+T=5
+N=5
 sigma=1.0
 beta=1
 lam=1 #lambda
@@ -158,12 +158,13 @@ L=D-A
 sp=lam*(theta_star(c,N).T@np.kron(L,I)@theta_star(c,N))        
 
 
-#Penalised loss function
+#PENALISED LOSS FUNCTION
 plf=dft+sp
 
-
-
-
+#EIGENVALUES OF f(θ)
+f=Phi.T@Phi + lam*(np.kron(L,I))
+eigenvalues=np.linalg.eigvals(f)
+min_eigenvalues=min(eigenvalues)
 #================================================
 #SANITY CHECK
 #================================================
