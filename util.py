@@ -1,3 +1,4 @@
+#Generate trajectories x
 def generate_traj(m, T, sigma, c):
   np.random.seed(1)
   eta = np.random.normal(loc=0, scale=sigma, size=(m, T)) #generate i.i.d. N(0,\sigma^2)
@@ -6,3 +7,8 @@ def generate_traj(m, T, sigma, c):
     for t in range(T):
       x[i,t+1]=f(x[i,t],c_l)+eta[i,t]
   return x
+
+#Generate c_l
+def generate_c(m, beta):
+    l = np.arange(1, m+1)
+    return (l/m)**beta
