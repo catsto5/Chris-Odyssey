@@ -1,67 +1,129 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os; os.chdir(r"C:\Users\chris\Downloads\Odyssey")
+import os
+
+os.chdir(r"C:\Users\chris\Downloads\Odyssey")
 from utils import *
 
-# ---------- PARAMETERS --------------
-R=50
-beta = 1
-T = 5
+# ---------- PARAMETERS ----------
+R = 50
 N = 10
-C=1
-sigma = 1.0
-results = {}
+beta = 0.5
+T = 20
+
 np.random.seed(1)
-# ---------- SIMULATIONS --------------
-for m in [5,25,50,100]:
-    lam = C*(m)**((4/5)*beta) #lambda
-    c = generate_c(m, beta)
-    L = build_laplacian(m)  #builds the path graph G([m],E)
-    theta_true_N = theta_star(c, N)
-    theta_true_10N = theta_star(c, 10*N)
-    trunc_error= np.linalg.norm(theta_true_10N[m*N:])**2 / m #this is the 2nd part of the MSE
-    est_errors = [] #store error
-    for r in range(1,R+1):
-        #Generate trajectories
-        x=generate_traj(m, T, sigma, c)    #random
-        X = x_vec(x)  #random
-        Phi = Phi_vec(x, N) #not random
-        
-        #Obtain $\hat\theta$ using $G(L)$ and trajectories.
-        M = Phi.T @ Phi + lam * (np.kron(L, I)) #random
-        theta_hat = np.linalg.lstsq(M, Phi.T @ X, rcond=None)[0] #this is random
-        
-        #Find MSE
-        est_error = np.linalg.norm(theta_hat - theta_true_N)**2 / m
-        est_errors.append(est_error) #store the error into the vector
-    results[m] = {
-        'raw_est_errors': est_errors,
-        'trunc_error': trunc_error,
-        'mean_est_error': np.mean(est_errors)
-    }
-    print(f"  Mean Est Error: {np.mean(est_errors):.6f}")
-    
-    
-# ------------------- BOX PLOT OF TOTAL APPROXIMATED MSE -------------------
-ms = sorted(results.keys())
+I = np.eye(N)
 
-data_to_plot = []
+ms = [2, 5, 25, 50, 100]
+Cs = [0, 1]
+
+all_results = {}
+
+# ---------- SIMULATIONS ----------
+for C in Cs:
+    print(f"\nRunning simulations for C = {C}")
+    results = {}
+
+    for m in ms:
+        lam = C * m**((4/5) * beta)
+
+        c = generate_c(m, beta)
+        L = build_laplacian(m)
+
+        theta_true_N = theta_star(c, N)
+        theta_true_10N = theta_star(c, 10 * N)
+
+        trunc_error = np.linalg.norm(theta_true_10N[m*N:])**2 / m
+
+        est_errors = []
+
+        for r in range(R):
+            # Generate trajectories
+            x = generate_traj(m, T, c)
+            X = x_vec(x)
+            Phi = Phi_vec(x, N)
+
+            # Estimate theta
+            M = Phi.T @ Phi + lam * np.kron(L, I)
+            theta_hat = np.linalg.lstsq(M, Phi.T @ X, rcond=None)[0]
+
+            # Estimation error
+            est_error = np.linalg.norm(theta_hat - theta_true_N)**2 / m
+            est_errors.append(est_error)
+
+        results[m] = {
+            'raw_est_errors': est_errors,
+            'trunc_error': trunc_error,
+            'mean_est_error': np.mean(est_errors)
+        }
+
+        print(f"m = {m:3d}, Mean Est Error = {np.mean(est_errors):.6f}")
+
+    all_results[C] = results
+
+# ---------- PREPARE DATA FOR PLOTTING ----------
+data_C0 = []
+data_C1 = []
+
 for m in ms:
-    total_per_trial = [err + results[m]['trunc_error'] for err in results[m]['raw_est_errors']]
-    data_to_plot.append(total_per_trial)
+    total_errors_C0 = [
+        err + all_results[0][m]['trunc_error']
+        for err in all_results[0][m]['raw_est_errors']
+    ]
 
+    total_errors_C1 = [
+        err + all_results[1][m]['trunc_error']
+        for err in all_results[1][m]['raw_est_errors']
+    ]
+
+    data_C0.append(total_errors_C0)
+    data_C1.append(total_errors_C1)
+
+# ---------- PLOT ----------
 plt.figure(figsize=(10, 6))
-box = plt.boxplot(data_to_plot, labels=ms, patch_artist=True, 
-                  showmeans=True, meanline=True)
 
-for patch in box['boxes']:
+pos0 = np.arange(len(ms)) * 2 - 0.3
+pos1 = np.arange(len(ms)) * 2 + 0.3
+
+box0 = plt.boxplot(
+    data_C0,
+    positions=pos0,
+    widths=0.5,
+    patch_artist=True,
+    showmeans=True,
+    meanline=True
+)
+
+box1 = plt.boxplot(
+    data_C1,
+    positions=pos1,
+    widths=0.5,
+    patch_artist=True,
+    showmeans=True,
+    meanline=True
+)
+
+for patch in box0['boxes']:
+    patch.set_facecolor('lightcoral')
+
+for patch in box1['boxes']:
     patch.set_facecolor('lightblue')
 
-plt.xlabel('Number of systems ($m$)', fontsize=12)
-plt.ylabel('Approximated MSE', fontsize=12)
-plt.title(f'Distribution of Approximated MSE over {R} Trials', fontsize=14)
-plt.grid(True, alpha=0.3, axis='y')
-plt.yscale('log')
-plt.show()
+plt.xticks(np.arange(len(ms)) * 2, ms)
+plt.xlabel(r'Number of systems ($m$)', fontsize=30)
+plt.ylabel(r'Approx. MSE', fontsize=30)
+plt.title(rf'Trial for $\beta={beta}$ and $T={T}$', fontsize=30)
 
-#plf = data_fit_term(X, Phi, theta) + smoothness_penalty(c, N, lam)
+plt.tick_params(axis='both', labelsize=25)
+
+
+plt.yscale('log')
+plt.ylim(1e-1, 1e5)
+
+
+plt.plot([], [], color='lightcoral', linewidth=8, label=r'$\lambda=0$')
+plt.plot([], [], color='lightblue', linewidth=8, label=r'$\lambda=m^{4\beta/5}$')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
